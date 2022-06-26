@@ -1,0 +1,110 @@
+---
+# tasks file for nomad
+
+# https://learn.hashicorp.com/tutorials/nomad/production-deployment-guide-vm-with-consul
+
+# nomad download 
+
+- name: Set workspace
+  file:
+    path: "{{ WORKSPACE_DIR }}"
+    state: "{{ item }}"
+  loop:
+   - absent
+   - directory 
+    
+
+- name: Download Nomad Binary
+  get_url:
+    url: "https://releases.hashicorp.com/nomad/{{ NOMAD_VERSION }}}/nomad_{{ NOMAD_VERSION }}_linux_amd64.zip"
+    dest: "{{ WORKSPACE_DIR}}/nomad.zip"
+    mode: 0700
+
+- name: Unarchive nomad zip
+  unarchive:
+    src: "{{ WORKSPACE_DIR}}/nomad.zip"
+    dest: "{{ WORKSPACE_DIR}}"
+    mode: 0755
+
+
+- name: Move nomad to bin
+  command:
+    cmd: "mv {{ WORKSPACE_DIR}}/nomad /usr/local/bin/"
+
+
+
+# nomad setup
+
+
+
+- name: Add Nomad User
+  useradd:
+    name: nomad
+    shell: /bin/false
+    home: /etc/nomad.d
+    state: present 
+    system: yes
+
+
+- name: Data Directory
+  file:
+    path: "{{ DATA_DIR }}"
+    state: "directory"
+    owner: nomad
+    group: nomad
+
+- name: Create Nomad Service File 
+  template:
+    src: nomad.service.j2
+    dest: /etc/systemd/system/nomad.service
+
+
+
+# nomad configuration
+
+
+- name: Nomad Config Directory
+  file:
+    state: /etc/nomad.d
+    state: directory 
+    owner: nomad
+    group: nomad
+    mode: 0700 
+
+
+
+
+- name: Create Nomad Service File 
+  template:
+    src: nomad.hcl.j2
+    dest: /etc/nomad.d/nomad.hcl
+    owner: nomad
+    group: nomad
+
+
+- name: Create Nomad Service File 
+  template:
+    src: server.hcl.j2
+    dest: /etc/nomad.d/server.hcl
+    owner: nomad
+    group: nomad
+  tags:
+    - server
+    - all
+    
+
+# - name: Create Nomad Service File 
+#   template:
+#     src: client.hcl.j2
+#     dest: /etc/nomad.d/client.hcl
+#     owner: nomad
+#     group: nomad
+
+
+- name: Update host entry
+  lineinfile:
+    line: "{{ inventory_hostname }} nomad.cluster.local"
+    dest: "/etc/hosts"
+    state: present
+  with_items: "{{ groups['all'] }}"
+
