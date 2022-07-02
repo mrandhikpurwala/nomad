@@ -13,21 +13,19 @@
     path: "{{ WORKSPACE_DIR }}"
     state: "{{ item }}"
   loop:
-   - absent
    - directory 
     
 
 - name: Download Nomad Binary
   get_url:
-    url: "https://releases.hashicorp.com/nomad/{{ NOMAD_VERSION }}}/nomad_{{ NOMAD_VERSION }}_linux_amd64.zip"
-    dest: "{{ WORKSPACE_DIR}}/nomad.zip"
-    mode: 0700
+    url: "https://releases.hashicorp.com/nomad/{{ NOMAD_VERSION }}/nomad_{{ NOMAD_VERSION }}_linux_amd64.zip"
+    dest: "{{ WORKSPACE_DIR }}/nomad.zip"
+    mode: 0755
 
 - name: Unarchive nomad zip
   unarchive:
     src: "{{ WORKSPACE_DIR}}/nomad.zip"
     dest: "{{ WORKSPACE_DIR}}"
-    mode: 0755
 
 
 - name: Move nomad to bin
@@ -41,7 +39,7 @@
 
 
 - name: Add Nomad User
-  useradd:
+  user:
     name: nomad
     shell: /bin/false
     home: /etc/nomad.d
@@ -68,7 +66,7 @@
 
 - name: Nomad Config Directory
   file:
-    state: /etc/nomad.d
+    path: /etc/nomad.d
     state: directory 
     owner: nomad
     group: nomad
@@ -124,4 +122,12 @@
   when: setup == "server"
 
 
-  
+
+
+- name: Setup nomad service
+  systemd:
+    name: nomad
+    state: started
+    enabled: yes
+
+    
