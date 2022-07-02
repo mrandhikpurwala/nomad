@@ -1,0 +1,55 @@
+--- 
+  - hosts: all
+    connection: local
+
+    vars_files:
+     - ../vars/main.yml
+    
+    tasks:
+    - name: 
+      file:
+        state: directory
+        path: "{{ WORKSPACE_DIR }}"
+        recurse: yes
+
+    - name: Create CA
+      command:
+        cmd: "cfssl print-defaults csr | cfssl gencert -initca - | cfssljson -bare nomad-ca"
+        chdir: "{{ WORKSPACE_DIR }}"
+      tags:
+      - createcerts
+
+
+    - name: Create CFSSL Json
+      template:
+        src: cfssl.json.j2
+        dest: "{{ WORKSPACE_DIR }}/cfssl.json"
+      tags:
+      - createcerts    
+
+
+    - name: Create Server certs
+      command:
+        cmd: "echo '{}' | cfssl gencert -ca=nomad-ca.pem -ca-key=nomad-ca-key.pem -config=cfssl.json -hostname='server.global.nomad,localhost,127.0.0.1' - | cfssljson -bare server"
+        chdir: "{{ WORKSPACE_DIR }}"
+      tags:
+      - createcerts 
+
+
+    - name: Create Client Certs
+      command: 
+        cmd: "echo '{}' | cfssl gencert -ca=nomad-ca.pem -ca-key=nomad-ca-key.pem -config=cfssl.json -hostname='client.global.nomad,localhost,127.0.0.1' - | cfssljson -bare client"
+        chdir: "{{ WORKSPACE_DIR }}"
+      tags:
+      - createcerts
+
+
+    - name: Create CLI Certs
+      command: 
+        cmd: "echo '{}' | cfssl gencert -ca=nomad-ca.pem -ca-key=nomad-ca-key.pem -profile=client - | cfssljson -bare cli"
+        chdir: "{{ WORKSPACE_DIR }}"
+      tags:
+      - createcerts
+
+
+

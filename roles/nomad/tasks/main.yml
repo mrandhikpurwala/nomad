@@ -5,6 +5,9 @@
 
 # nomad download 
 
+
+
+
 - name: Set workspace
   file:
     path: "{{ WORKSPACE_DIR }}"
@@ -88,10 +91,7 @@
     dest: /etc/nomad.d/server.hcl
     owner: nomad
     group: nomad
-  tags:
-    - server
-    - all
-    
+  when: setup == "server"
 
 # - name: Create Nomad Service File 
 #   template:
@@ -103,8 +103,25 @@
 
 - name: Update host entry
   lineinfile:
-    line: "{{ inventory_hostname }} nomad.cluster.local"
+    line: "{{ inventory_hostname }} server.global.nomad"
     dest: "/etc/hosts"
     state: present
   with_items: "{{ groups['all'] }}"
 
+
+
+# nomad tls 
+# pre step to generate certs
+
+- name: Copy certs 
+  copy:
+    src: "{{ WORKSPACE_DIR }}/{{ item }}"
+    dest: "/etc/nomad.d/"
+  loop:
+   - nomad-ca.pem
+   - server.pem
+   - server-key.pem 
+  when: setup == "server"
+
+
+  

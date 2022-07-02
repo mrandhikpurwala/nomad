@@ -1,2 +1,8 @@
 ---
 # vars file for nomad
+
+NOMAD_VERSION: "1.1.0"
+WORKSPACE_DIR: "/os/workspace/tmpnomad"
+DATA_DIR: "/os/nomad"
+NOMAD_CLUSTER_SERVERS: "3"
+DATACENTRE: dc1
