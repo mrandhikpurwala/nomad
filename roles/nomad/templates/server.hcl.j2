@@ -3,6 +3,18 @@ server {
   bootstrap_expect = {{ NOMAD_CLUSTER_SERVERS }}
 }
 
+bind_addr = "{{ inventory_hostname }}"
+
+advertise {
+  # Defaults to the first private IP address.
+  http = "{{ inventory_hostname }}"
+  rpc  = "{{ inventory_hostname }}"
+  serf = "{{ inventory_hostname }}"
+}
+
+
+
+
 # Require TLS
 tls {
   http = true
